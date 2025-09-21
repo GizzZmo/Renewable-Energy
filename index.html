@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Renewable Energy Trends 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as an interactive dashboard, moving from a high-level global overview to more granular deep dives. This structure was chosen to guide the user through a logical discovery process: 1. **Hero Section:** Immediately present the report's core purpose and a key summary statistic to establish context. 2. **Interactive Global Dashboard:** Allow users to explore top-level trends by year, fostering engagement through controls that affect multiple visualizations and text blocks simultaneously. This is more intuitive than static chapters. 3. **Thematic Deep Dive (By Energy Type):** Use a tabbed interface to let users explore specific renewable sources. This organizes detailed information without cluttering the main view, catering to users interested in particular technologies. 4. **Regional Analysis:** Provide a geographical filter to compare and contrast trends across continents, answering key questions about regional disparities and progress. 5. **Conclusions:** A final, static section to summarize key takeaways. This non-linear, user-driven structure makes the dense report content more digestible and explorable than a linear document. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Total renewable capacity and growth rate. -> Goal: Inform. -> Viz/Method: Large statistic cards (HTML/CSS). -> Interaction: Values update based on year selector. -> Justification: Provides immediate, high-impact takeaways. -> Library/Method: Vanilla JS.
+        - Report Info: Global share of each renewable type. -> Goal: Show proportion. -> Viz/Method: Donut Chart. -> Interaction: Updates with year selector. -> Justification: Excellent for showing part-to-whole relationships at a glance. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Renewable capacity growth over time. -> Goal: Show change/trend. -> Viz/Method: Line Chart. -> Interaction: Updates based on active energy types (future feature), tooltips on hover. -> Justification: The best method for visualizing trends across a time series. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Top countries by energy type capacity. -> Goal: Compare/Rank. -> Viz/Method: Horizontal Bar Chart. -> Interaction: Chart and data update when user switches tabs (Solar, Wind, Hydro). -> Justification: Clearly displays rankings and magnitude differences between entities. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Regional renewable mix. -> Goal: Compare compositions. -> Viz/Method: Stacked Bar Chart. -> Interaction: Updates based on region dropdown. -> Justification: Allows comparison of both total capacity (bar height) and internal composition across different regions. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Qualitative findings, policy impacts, future outlook. -> Goal: Inform/Explain. -> Viz/Method: Dynamic text blocks (HTML). -> Interaction: Text content updates based on selected filters (year, type, region). -> Justification: Provides crucial context and narrative to support the data visualizations. -> Library/Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f3f1;
+            color: #374151;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #a5b4fc;
+            color: #1e293b;
+        }
+        .tab-button.active {
+            border-bottom-color: #818cf8;
+            color: #4338ca;
+            font-weight: 600;
+        }
+        .gemini-btn {
+            background-color: #4f46e5;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .gemini-btn:hover {
+            background-color: #4338ca;
+        }
+        .gemini-btn:disabled {
+            background-color: #a5b4fc;
+            cursor: not-allowed;
+        }
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #ddd;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-white/70 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-indigo-600">Renewable Trends 2025</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#global-overview" class="nav-button text-gray-700 hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">Global Overview</a>
+                        <a href="#type-deep-dive" class="nav-button text-gray-700 hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">By Energy Type</a>
+                        <a href="#regional-analysis" class="nav-button text-gray-700 hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">Regional Analysis</a>
+                        <a href="#regional-comparison" class="nav-button text-gray-700 hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">Compare Regions</a>
+                        <a href="#conclusions" class="nav-button text-gray-700 hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">Conclusions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800">Global Renewable Energy Trends</h1>
+            <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">An interactive summary of the 2025 report on the state of renewable energy, exploring growth, distribution, and future outlooks.</p>
+        </header>
+
+        <section id="global-overview" class="mb-16 scroll-mt-20">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Global Dashboard</h2>
+                    <div class="flex items-center gap-4">
+                        <label for="year-selector" class="font-semibold text-gray-700">Select Year:</label>
+                        <select id="year-selector" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                            <option value="2023">2023</option>
+                            <option value="2024">2024</option>
+                            <option value="2025" selected>2025</option>
+                        </select>
+                    </div>
+                </div>
+
+                <p class="text-gray-600 mb-8 max-w-4xl mx-auto text-center">
+                    This section provides a high-level overview of the global renewable energy landscape. Use the year selector to see how key metrics and the energy mix have evolved. The charts below display the proportional contribution of different renewable sources and the historical growth trend.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+                    <div class="bg-indigo-50 p-6 rounded-xl">
+                        <h3 class="text-lg font-semibold text-indigo-800">Total Capacity</h3>
+                        <p id="total-capacity" class="text-4xl font-bold text-indigo-600 mt-2">3,870 GW</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-xl">
+                        <h3 class="text-lg font-semibold text-green-800">Annual Growth</h3>
+                        <p id="annual-growth" class="text-4xl font-bold text-green-600 mt-2">+13.2%</p>
+                    </div>
+                    <div class="bg-amber-50 p-6 rounded-xl">
+                        <h3 class="text-lg font-semibold text-amber-800">Total Investment</h3>
+                        <p id="total-investment" class="text-4xl font-bold text-amber-600 mt-2">$620B</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Global Energy Mix (<span id="mix-year">2025</span>)</h3>
+                        <div class="chart-container h-80 md:h-96">
+                            <canvas id="energyMixChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Capacity Growth (2020-2025)</h3>
+                        <div class="chart-container h-80 md:h-96">
+                            <canvas id="growthTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                 <div class="mt-8 border-t pt-6 text-center">
+                    <button id="generate-trends-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 mx-auto">
+                        <span>✨ Project Future Trends</span>
+                    </button>
+                    <div id="trends-projection-container" class="mt-6 text-left max-w-3xl mx-auto bg-gray-50 p-6 rounded-lg border border-gray-200 hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="type-deep-dive" class="mb-16 scroll-mt-20">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">Deep Dive by Energy Type</h2>
+                 <p class="text-gray-600 mt-4 mb-8 max-w-4xl mx-auto text-center">
+                    Explore the specifics of each major renewable energy source. Select a tab to view a breakdown of the top producing countries for the year <span id="deep-dive-year">2025</span> and read about key technological and market insights for that sector.
+                </p>
+                <div class="border-b border-gray-200 mb-6">
+                    <nav id="type-tabs" class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+                        <button data-type="solar" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Solar</button>
+                        <button data-type="wind" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Wind</button>
+                        <button data-type="hydro" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Hydro</button>
+                    </nav>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                    <div class="lg:col-span-3">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Top 5 Countries by Capacity (<span id="type-chart-title">Solar</span>, <span id="type-chart-year">2025</span>)</h3>
+                        <div class="chart-container h-80 md:h-96">
+                            <canvas id="byTypeChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="type-insights" class="lg:col-span-2 bg-gray-50 p-6 rounded-lg">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="regional-analysis" class="mb-16 scroll-mt-20">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Regional Analysis</h2>
+                    <div class="flex items-center gap-4">
+                        <label for="region-selector" class="font-semibold text-gray-700">Select Region:</label>
+                        <select id="region-selector" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                            <option value="Asia">Asia</option>
+                            <option value="Europe">Europe</option>
+                            <option value="North America">North America</option>
+                            <option value="South America">South America</option>
+                            <option value="Africa">Africa</option>
+                        </select>
+                    </div>
+                </div>
+                 <p class="text-gray-600 mb-8 max-w-4xl mx-auto text-center">
+                    This section breaks down the renewable energy landscape by geographical region for the year <span id="regional-year">2025</span>. Use the dropdown to switch between continents and observe the differences in their renewable energy mix and dominant technologies, which are often influenced by local policies, resources, and economic factors.
+                </p>
+                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                    <div class="lg:col-span-3">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Regional Mix: <span id="regional-chart-title">Asia</span> (<span id="regional-chart-year">2025</span>)</h3>
+                        <div class="chart-container h-80 md:h-96">
+                            <canvas id="regionalMixChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="regional-insights" class="lg:col-span-2 bg-gray-50 p-6 rounded-lg">
+                        <h4 class="font-bold text-lg mb-2 text-gray-800">Insights: Asia</h4>
+                        <p class="text-gray-600" id="regional-insights-text">Asia leads global renewable capacity, primarily driven by massive investments in solar and wind in China and India. The region is also a key player in hydropower, though focus is shifting towards diversifying the energy portfolio to enhance grid stability and reduce reliance on a single source.</p>
+                        <button id="generate-summary-btn" class="gemini-btn font-bold py-2 px-4 rounded-lg mt-4 w-full flex items-center justify-center gap-2">
+                            <span>✨ Generate AI Summary</span>
+                        </button>
+                        <div id="ai-summary-container" class="mt-4 text-gray-700 bg-indigo-50 p-4 rounded-md border border-indigo-200 hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="regional-comparison" class="mb-16 scroll-mt-20">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">AI-Powered Regional Comparison</h2>
+                <p class="text-gray-600 mt-4 mb-8 max-w-4xl mx-auto text-center">
+                    Select two regions to generate a comparative analysis using AI. The model will evaluate their renewable energy strategies, strengths, and challenges based on the report data for the selected year.
+                </p>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-6">
+                    <div class="flex items-center gap-2">
+                        <label for="region-selector-1" class="font-semibold text-gray-700">Region 1:</label>
+                        <select id="region-selector-1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                            <option value="Asia">Asia</option>
+                            <option value="Europe" selected>Europe</option>
+                            <option value="North America">North America</option>
+                            <option value="South America">South America</option>
+                            <option value="Africa">Africa</option>
+                        </select>
+                    </div>
+                    <span class="font-bold text-gray-500">vs.</span>
+                    <div class="flex items-center gap-2">
+                         <label for="region-selector-2" class="font-semibold text-gray-700">Region 2:</label>
+                        <select id="region-selector-2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                            <option value="Asia">Asia</option>
+                            <option value="Europe">Europe</option>
+                            <option value="North America" selected>North America</option>
+                            <option value="South America">South America</option>
+                            <option value="Africa">Africa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button id="generate-comparison-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 mx-auto">
+                        <span>✨ Compare Regions</span>
+                    </button>
+                    <div id="comparison-container" class="mt-6 text-left max-w-4xl mx-auto bg-gray-50 p-6 rounded-lg border border-gray-200 hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusions" class="scroll-mt-20">
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">Conclusions & Future Outlook</h2>
+                 <p class="text-gray-600 mt-4 mb-8 max-w-4xl mx-auto text-center">
+                    The report concludes that the global transition to renewable energy is accelerating faster than previous projections. However, significant challenges remain, requiring concerted efforts in policy, technology, and infrastructure investment to meet long-term climate goals.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <h4 class="font-bold text-lg mb-2 text-blue-800">Policy is Key</h4>
+                        <p class="text-blue-900">Stable, long-term government policies, such as feed-in tariffs and tax credits, remain the most critical factor in attracting private investment and driving large-scale deployment of renewable projects.</p>
+                    </div>
+                    <div class="bg-purple-50 p-6 rounded-lg">
+                        <h4 class="font-bold text-lg mb-2 text-purple-800">Grid Modernization</h4>
+                        <p class="text-purple-900">Integrating variable renewable sources requires significant investment in grid modernization, including smart grids, energy storage solutions, and improved transmission infrastructure to ensure reliability.</p>
+                    </div>
+                    <div class="bg-teal-50 p-6 rounded-lg">
+                        <h4 class="font-bold text-lg mb-2 text-teal-800">Emerging Technologies</h4>
+                        <p class="text-teal-900">Green hydrogen, next-generation battery storage, and advanced geothermal technologies are poised to play a crucial role in decarbonizing hard-to-abate sectors and providing 24/7 clean power in the coming decade.</p>
+                    </div>
+                </div>
+                 <div class="mt-8 text-center">
+                    <button id="generate-policy-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 mx-auto">
+                        <span>✨ Suggest Policy Actions</span>
+                    </button>
+                    <div id="policy-suggestions-container" class="mt-6 text-left max-w-3xl mx-auto bg-gray-50 p-6 rounded-lg border border-gray-200 hidden"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const FONT_COLOR = '#374151';
+            const GRID_COLOR = '#e5e7eb';
+
+            const reportData = {
+                2023: {
+                    summary: { capacity: 3140, growth: 10.1, investment: 510 },
+                    mix: { solar: 1200, wind: 950, hydro: 850, other: 140 },
+                    byType: {
+                        solar: { labels: ['China', 'USA', 'Japan', 'Germany', 'India'], data: [450, 150, 90, 85, 80], insights: "2023 saw a surge in residential solar installations, driven by supportive net metering policies and increased public awareness, especially in Europe and North America." },
+                        wind: { labels: ['China', 'USA', 'Germany', 'India', 'Spain'], data: [380, 140, 70, 60, 50], insights: "Offshore wind projects gained significant traction in 2023, with larger turbines and improved installation techniques lowering costs and boosting capacity factors." },
+                        hydro: { labels: ['China', 'Brazil', 'USA', 'Canada', 'Russia'], data: [360, 110, 85, 80, 55], insights: "Hydropower growth in 2023 was modest, focusing on upgrading existing facilities for better efficiency rather than building new large-scale dams due to environmental concerns." },
+                    },
+                    regional: {
+                        'Asia': { data: [800, 500, 420], insights: "Asia's 2023 growth was led by China's aggressive expansion in both solar manufacturing and deployment, solidifying its position as the global leader." },
+                        'Europe': { data: [200, 250, 150], insights: "Europe focused on enhancing grid interconnectivity in 2023 to better manage the variable output from its expanding wind and solar resources." },
+                        'North America': { data: [180, 160, 100], insights: "In 2023, North America saw significant corporate procurement of renewable energy, with major tech companies investing heavily in new wind and solar farms." },
+                        'South America': { data: [40, 50, 130], insights: "South America's renewable landscape in 2023 remained dominated by hydropower, but wind and solar projects saw increased investment, particularly in Brazil and Chile." },
+                        'Africa': { data: [20, 15, 40], insights: "Africa's 2023 progress was marked by off-grid and mini-grid solar projects, aiming to improve energy access in rural communities across the continent." },
+                    }
+                },
+                2024: {
+                    summary: { capacity: 3450, growth: 11.5, investment: 560 },
+                    mix: { solar: 1450, wind: 1050, hydro: 880, other: 170 },
+                    byType: {
+                        solar: { labels: ['China', 'USA', 'India', 'Germany', 'Japan'], data: [580, 180, 110, 95, 90], insights: "In 2024, bifacial solar panels, which capture light on both sides, became more mainstream, increasing energy yield per unit of land and making solar viable in more locations." },
+                        wind: { labels: ['China', 'USA', 'Germany', 'India', 'Brazil'], data: [430, 155, 75, 68, 55], insights: "The wind industry in 2024 faced some supply chain challenges, but advances in predictive maintenance using AI helped improve the reliability and efficiency of existing wind farms." },
+                        hydro: { labels: ['China', 'Brazil', 'USA', 'Canada', 'India'], data: [370, 112, 86, 81, 58], insights: "Pumped-storage hydropower gained attention in 2024 as a crucial long-duration energy storage solution to complement the growth of variable renewables like solar and wind." },
+                    },
+                    regional: {
+                        'Asia': { data: [950, 580, 450], insights: "By 2024, Asia was not only leading in capacity but also in renewable technology manufacturing, particularly for solar panels and batteries." },
+                        'Europe': { data: [240, 280, 155], insights: "The European Union's green policies in 2024 accelerated the phase-out of coal, creating more market opportunities for renewable energy sources across the member states." },
+                        'North America': { data: [220, 180, 102], insights: "Utility-scale battery storage installations saw a boom in North America in 2024, paired with large solar projects to provide reliable power." },
+                        'South America': { data: [55, 65, 133], insights: "Green hydrogen projects, powered by abundant solar and wind, started to emerge in South America during 2024, positioning the region as a future clean fuel exporter." },
+                        'Africa': { data: [30, 25, 42], insights: "International finance played a bigger role in Africa's renewable sector in 2024, funding larger-scale wind and solar projects in countries like South Africa and Egypt." },
+                    }
+                },
+                2025: {
+                    summary: { capacity: 3870, growth: 13.2, investment: 620 },
+                    mix: { solar: 1750, wind: 1150, hydro: 900, other: 220 },
+                    byType: {
+                        solar: { labels: ['China', 'USA', 'India', 'Germany', 'Brazil'], data: [720, 220, 150, 105, 95], insights: "Solar power continues its exponential growth, driven by falling panel costs and significant policy support in key markets. Perovskite solar cell technology is showing promise, potentially increasing efficiency by over 30% in the next decade." },
+                        wind: { labels: ['China', 'USA', 'Germany', 'India', 'Brazil'], data: [480, 170, 80, 75, 60], insights: "Floating offshore wind platforms are being deployed in deeper waters, opening up vast new areas for wind energy generation. Taller onshore turbines with larger rotor diameters are also maximizing capacity." },
+                        hydro: { labels: ['China', 'Brazil', 'USA', 'Canada', 'India'], data: [380, 115, 88, 83, 60], insights: "The focus for hydropower is on modernization and sustainability. Projects are increasingly incorporating fish-friendly turbines and environmental flow management to minimize ecological impact while maximizing output." },
+                    },
+                    regional: {
+                        'Asia': { data: [1150, 650, 480], insights: "Asia leads global renewable capacity, primarily driven by massive investments in solar and wind in China and India. The region is also a key player in hydropower, though focus is shifting towards diversifying the energy portfolio to enhance grid stability and reduce reliance on a single source." },
+                        'Europe': { data: [280, 310, 160], insights: "Europe is doubling down on its green transition, with a strong focus on offshore wind and cross-border energy projects to create a unified, resilient, and fully renewable power grid." },
+                        'North America': { data: [270, 200, 105], insights: "The US and Canada are heavily investing in grid upgrades and energy storage to support their rapidly growing solar and wind capacities, driven by both federal incentives and state-level renewable portfolio standards." },
+                        'South America': { data: [70, 80, 135], insights: "Hydropower remains the cornerstone of South America's energy mix, but solar and wind are the fastest-growing sources, attracting significant foreign investment due to excellent natural resources." },
+                        'Africa': { data: [40, 35, 45], insights: "Africa's renewable energy potential is vast and largely untapped. Growth is accelerating through a combination of large-scale projects and decentralized systems that are crucial for expanding energy access." },
+                    }
+                }
+            };
+            
+            const growthData = {
+                labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
+                datasets: [
+                    { label: 'Solar', data: [850, 1000, 1180, 1200, 1450, 1750], borderColor: '#f59e0b', backgroundColor: '#fde68a', tension: 0.1 },
+                    { label: 'Wind', data: [740, 830, 900, 950, 1050, 1150], borderColor: '#10b981', backgroundColor: '#a7f3d0', tension: 0.1 },
+                    { label: 'Hydro', data: [800, 820, 840, 850, 880, 900], borderColor: '#3b82f6', backgroundColor: '#bfdbfe', tension: 0.1 }
+                ]
+            };
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: FONT_COLOR, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        backgroundColor: '#ffffff',
+                        titleColor: '#374151',
+                        bodyColor: '#374151',
+                        borderColor: '#e5e7eb',
+                        borderWidth: 1,
+                        callbacks: {
+                           label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' GW';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: GRID_COLOR },
+                        ticks: { color: FONT_COLOR }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: FONT_COLOR }
+                    }
+                }
+            };
+
+            const donutOptions = { ...chartOptions, scales: {} };
+            const horizontalBarOptions = { ...chartOptions, indexAxis: 'y' };
+
+            let energyMixChart, growthTrendChart, byTypeChart, regionalMixChart;
+
+            function createCharts() {
+                energyMixChart = new Chart(document.getElementById('energyMixChart'), {
+                    type: 'doughnut',
+                    data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#6b7280'] }] },
+                    options: donutOptions
+                });
+                growthTrendChart = new Chart(document.getElementById('growthTrendChart'), {
+                    type: 'line',
+                    data: growthData,
+                    options: chartOptions
+                });
+                byTypeChart = new Chart(document.getElementById('byTypeChart'), {
+                    type: 'bar',
+                    data: { labels: [], datasets: [{ label: 'Capacity (GW)', data: [], backgroundColor: '#a5b4fc' }] },
+                    options: horizontalBarOptions
+                });
+                regionalMixChart = new Chart(document.getElementById('regionalMixChart'), {
+                    type: 'bar',
+                    data: { labels: ['Solar', 'Wind', 'Hydro'], datasets: [{ label: 'Capacity (GW)', data: [], backgroundColor: ['#f59e0b', '#10b981', '#3b82f6'] }] },
+                    options: chartOptions
+                });
+            }
+
+            function updateDashboard() {
+                const year = document.getElementById('year-selector').value;
+                const region = document.getElementById('region-selector').value;
+                const activeType = document.querySelector('#type-tabs .active').dataset.type;
+                const data = reportData[year];
+
+                document.getElementById('total-capacity').textContent = `${data.summary.capacity} GW`;
+                document.getElementById('annual-growth').textContent = `+${data.summary.growth}%`;
+                document.getElementById('total-investment').textContent = `$${data.summary.investment}B`;
+                document.getElementById('mix-year').textContent = year;
+                document.getElementById('deep-dive-year').textContent = year;
+                document.getElementById('regional-year').textContent = year;
+                
+                document.getElementById('ai-summary-container').classList.add('hidden');
+                document.getElementById('ai-summary-container').innerHTML = '';
+                document.getElementById('trends-projection-container').classList.add('hidden');
+                document.getElementById('trends-projection-container').innerHTML = '';
+                document.getElementById('comparison-container').classList.add('hidden');
+                document.getElementById('comparison-container').innerHTML = '';
+
+
+                energyMixChart.data.labels = ['Solar', 'Wind', 'Hydro', 'Other'];
+                energyMixChart.data.datasets[0].data = Object.values(data.mix);
+                energyMixChart.update();
+
+                updateByType(activeType, year);
+                updateByRegion(region, year);
+            }
+
+            function updateByType(type, year) {
+                const data = reportData[year].byType[type];
+                document.getElementById('type-chart-title').textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                document.getElementById('type-chart-year').textContent = year;
+                byTypeChart.data.labels = data.labels;
+                byTypeChart.data.datasets[0].data = data.data;
+                byTypeChart.update();
+
+                const insightsContainer = document.getElementById('type-insights');
+                insightsContainer.innerHTML = `
+                    <h4 class="font-bold text-lg mb-2 text-gray-800">Key Insights: ${type.charAt(0).toUpperCase() + type.slice(1)}</h4>
+                    <p class="text-gray-600">${data.insights}</p>
+                    <button id="analyze-investment-btn" class="gemini-btn font-bold py-2 px-4 rounded-lg mt-4 w-full flex items-center justify-center gap-2">
+                        <span>✨ Analyze Investment Potential</span>
+                    </button>
+                    <div id="investment-analysis-container" class="mt-4 text-gray-700 bg-indigo-50 p-4 rounded-md border border-indigo-200 hidden"></div>
+                `;
+                
+                document.getElementById('analyze-investment-btn').addEventListener('click', () => {
+                    const topCountry = data.labels[0];
+                    const topCapacity = data.data[0];
+                    const prompt = `You are a financial analyst specializing in renewable energy. For the year ${year}, the top country for ${type} energy is ${topCountry} with a capacity of ${topCapacity} GW. The current market insight is: "${data.insights}". Based on this information, provide a brief (2-3 sentences) analysis of the investment potential for ${type} energy in ${topCountry}. Mention one potential opportunity and one potential risk.`;
+                    callGeminiAPI(prompt, document.getElementById('analyze-investment-btn'), document.getElementById('investment-analysis-container'));
+                });
+
+            }
+
+            function updateByRegion(region, year) {
+                const data = reportData[year].regional[region];
+                document.getElementById('regional-chart-title').textContent = region;
+                document.getElementById('regional-chart-year').textContent = year;
+                regionalMixChart.data.datasets[0].data = data.data;
+                regionalMixChart.update();
+
+                const insightsContainer = document.getElementById('regional-insights-text');
+                insightsContainer.textContent = data.insights;
+            }
+
+            async function callGeminiAPI(prompt, button, container) {
+                const originalButtonContent = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<span class="loader"></span><span>Generating...</span>';
+                container.classList.remove('hidden');
+                container.innerHTML = '<div class="flex items-center justify-center p-4"><span class="loader"></span></div>';
+                
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                };
+
+                try {
+                    let response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (text) {
+                        container.innerHTML = text.replace(/\n/g, '<br>');
+                    } else {
+                        container.textContent = 'Could not retrieve a summary. The model may have returned an empty response.';
+                    }
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    container.textContent = 'An error occurred while generating the summary. Please try again.';
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = originalButtonContent;
+                }
+            }
+
+            document.getElementById('generate-trends-btn').addEventListener('click', () => {
+                const prompt = `You are a renewable energy analyst. Based on the following historical capacity data (in GW) for Solar, Wind, and Hydro power from 2020 to 2025, provide a brief, qualitative projection for the next 5 years (2026-2030). Mention key drivers and potential challenges for each. Data: ${JSON.stringify(growthData.datasets.map(d => ({label: d.label, data: d.data})))}`;
+                callGeminiAPI(prompt, document.getElementById('generate-trends-btn'), document.getElementById('trends-projection-container'));
+            });
+            
+            document.getElementById('generate-summary-btn').addEventListener('click', () => {
+                const year = document.getElementById('year-selector').value;
+                const region = document.getElementById('region-selector').value;
+                const regionData = reportData[year].regional[region];
+                
+                const prompt = `Based on the following data for the renewable energy sector in ${region} for the year ${year}, provide a short, insightful summary (2-3 sentences) of the region's status and key drivers. Data: Total solar capacity is ${regionData.data[0]} GW, wind is ${regionData.data[1]} GW, and hydro is ${regionData.data[2]} GW. The key insight is: "${regionData.insights}"`;
+                
+                callGeminiAPI(prompt, document.getElementById('generate-summary-btn'), document.getElementById('ai-summary-container'));
+            });
+            
+            document.getElementById('generate-comparison-btn').addEventListener('click', () => {
+                const year = document.getElementById('year-selector').value;
+                const region1 = document.getElementById('region-selector-1').value;
+                const region2 = document.getElementById('region-selector-2').value;
+                const container = document.getElementById('comparison-container');
+                const button = document.getElementById('generate-comparison-btn');
+                
+                if (region1 === region2) {
+                    container.classList.remove('hidden');
+                    container.innerHTML = '<p class="text-amber-700 text-center">Please select two different regions to compare.</p>';
+                    return;
+                }
+                
+                const data1 = reportData[year].regional[region1];
+                const data2 = reportData[year].regional[region2];
+                
+                const prompt = `You are a comparative analyst. Based on the renewable energy data for the year ${year}, compare and contrast ${region1} and ${region2}.\n\n**${region1} Data:** Solar: ${data1.data[0]} GW, Wind: ${data1.data[1]} GW, Hydro: ${data1.data[2]} GW. Insight: "${data1.insights}"\n\n**${region2} Data:** Solar: ${data2.data[0]} GW, Wind: ${data2.data[1]} GW, Hydro: ${data2.data[2]} GW. Insight: "${data2.insights}"\n\nProvide a concise comparison (3-4 sentences) highlighting their primary energy sources, strategic focus, and one key difference.`;
+
+                callGeminiAPI(prompt, button, container);
+            });
+
+            document.getElementById('generate-policy-btn').addEventListener('click', () => {
+                const prompt = `The 2025 Global Renewable Energy Report highlights three key conclusions: 1. Policy is crucial for attracting investment. 2. Grid modernization is needed to handle variable renewables. 3. Emerging technologies like green hydrogen and battery storage are vital. Based on these findings, suggest three specific, actionable policy recommendations for a government aiming to accelerate its renewable energy transition. Format the response as an ordered list.`;
+                
+                callGeminiAPI(prompt, document.getElementById('generate-policy-btn'), document.getElementById('policy-suggestions-container'));
+            });
+
+            document.getElementById('year-selector').addEventListener('change', updateDashboard);
+            document.getElementById('region-selector').addEventListener('change', updateDashboard);
+
+            document.getElementById('type-tabs').addEventListener('click', function(e) {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#type-tabs .tab-button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    updateDashboard();
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('main section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => observer.observe(section));
+            
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            createCharts();
+            updateDashboard();
+        });
+    </script>
+</body>
+</html>
