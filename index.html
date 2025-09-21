@@ -6,10 +6,63 @@
     <title>Global Renewable Energy Trends 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Fallback for when CDN resources are blocked -->
+    <script>
+        // Check if Chart.js loaded, if not provide fallback
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js failed to load from CDN. Charts will not be displayed.');
+                // Hide chart containers and show fallback message
+                document.querySelectorAll('.chart-container').forEach(container => {
+                    container.innerHTML = '<div class="flex items-center justify-center h-full bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg"><p class="text-gray-600 text-center px-4">Chart visualization requires Chart.js.<br>Please check your internet connection.</p></div>';
+                });
+            }
+        });
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Fallback CSS for when Tailwind CSS doesn't load -->
+    <style>
+        /* Basic fallback styles if Tailwind CSS fails to load */
+        .fallback-styles {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #374151;
+        }
+        .fallback-nav {
+            background: #fff;
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .fallback-button {
+            background: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .fallback-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .fallback-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
     <!-- Application Structure Plan: The application is designed as an interactive dashboard, moving from a high-level global overview to more granular deep dives. This structure was chosen to guide the user through a logical discovery process: 1. **Hero Section:** Immediately present the report's core purpose and a key summary statistic to establish context. 2. **Interactive Global Dashboard:** Allow users to explore top-level trends by year, fostering engagement through controls that affect multiple visualizations and text blocks simultaneously. This is more intuitive than static chapters. 3. **Thematic Deep Dive (By Energy Type):** Use a tabbed interface to let users explore specific renewable sources. This organizes detailed information without cluttering the main view, catering to users interested in particular technologies. 4. **Regional Analysis:** Provide a geographical filter to compare and contrast trends across continents, answering key questions about regional disparities and progress. 5. **Conclusions:** A final, static section to summarize key takeaways. This non-linear, user-driven structure makes the dense report content more digestible and explorable than a linear document. -->
     <!-- Visualization & Content Choices: 
         - Report Info: Total renewable capacity and growth rate. -> Goal: Inform. -> Viz/Method: Large statistic cards (HTML/CSS). -> Interaction: Values update based on year selector. -> Justification: Provides immediate, high-impact takeaways. -> Library/Method: Vanilla JS.
@@ -77,6 +130,37 @@
         @keyframes rotation {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* Back to top button */
+        #back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            font-size: 18px;
+        }
+        
+        #back-to-top.visible {
+            opacity: 1;
+        }
+        
+        #back-to-top:hover {
+            background: #4338ca;
+        }
+        
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
         }
     </style>
 </head>
@@ -295,6 +379,43 @@
         </section>
     </main>
 
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">About This Dashboard</h3>
+                    <p class="text-gray-300">An interactive web dashboard for exploring global renewable energy trends from 2023-2025, featuring AI-powered analysis and comprehensive data visualizations.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Features</h3>
+                    <ul class="text-gray-300 space-y-1">
+                        <li>• Interactive Global Dashboard</li>
+                        <li>• Energy Type Deep Dive</li>
+                        <li>• Regional Analysis</li>
+                        <li>• AI-Powered Insights</li>
+                        <li>• Responsive Design</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Technology Stack</h3>
+                    <ul class="text-gray-300 space-y-1">
+                        <li>• HTML5, CSS3, JavaScript</li>
+                        <li>• Tailwind CSS</li>
+                        <li>• Chart.js</li>
+                        <li>• Google Gemini AI</li>
+                        <li>• Inter Typography</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-400">Made with 💚 for a sustainable future | <a href="https://github.com/GizzZmo/Renewable-Energy" target="_blank" class="text-green-400 hover:text-green-300">View on GitHub</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" title="Back to top">↑</button>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const FONT_COLOR = '#374151';
@@ -407,6 +528,11 @@
             let energyMixChart, growthTrendChart, byTypeChart, regionalMixChart;
 
             function createCharts() {
+                if (typeof Chart === 'undefined') {
+                    // Chart.js not available, skip chart creation
+                    return;
+                }
+                
                 energyMixChart = new Chart(document.getElementById('energyMixChart'), {
                     type: 'doughnut',
                     data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#6b7280'] }] },
@@ -449,10 +575,12 @@
                 document.getElementById('comparison-container').classList.add('hidden');
                 document.getElementById('comparison-container').innerHTML = '';
 
-
-                energyMixChart.data.labels = ['Solar', 'Wind', 'Hydro', 'Other'];
-                energyMixChart.data.datasets[0].data = Object.values(data.mix);
-                energyMixChart.update();
+                // Only update charts if Chart.js is available
+                if (typeof Chart !== 'undefined' && energyMixChart) {
+                    energyMixChart.data.labels = ['Solar', 'Wind', 'Hydro', 'Other'];
+                    energyMixChart.data.datasets[0].data = Object.values(data.mix);
+                    energyMixChart.update();
+                }
 
                 updateByType(activeType, year);
                 updateByRegion(region, year);
@@ -460,11 +588,20 @@
 
             function updateByType(type, year) {
                 const data = reportData[year].byType[type];
+                if (!data) {
+                    console.warn(`No data found for type: ${type} in year: ${year}`);
+                    return;
+                }
+                
                 document.getElementById('type-chart-title').textContent = type.charAt(0).toUpperCase() + type.slice(1);
                 document.getElementById('type-chart-year').textContent = year;
-                byTypeChart.data.labels = data.labels;
-                byTypeChart.data.datasets[0].data = data.data;
-                byTypeChart.update();
+                
+                // Only update charts if Chart.js is available
+                if (typeof Chart !== 'undefined' && byTypeChart) {
+                    byTypeChart.data.labels = data.labels;
+                    byTypeChart.data.datasets[0].data = data.data;
+                    byTypeChart.update();
+                }
 
                 const insightsContainer = document.getElementById('type-insights');
                 insightsContainer.innerHTML = `
@@ -487,10 +624,19 @@
 
             function updateByRegion(region, year) {
                 const data = reportData[year].regional[region];
+                if (!data) {
+                    console.warn(`No data found for region: ${region} in year: ${year}`);
+                    return;
+                }
+                
                 document.getElementById('regional-chart-title').textContent = region;
                 document.getElementById('regional-chart-year').textContent = year;
-                regionalMixChart.data.datasets[0].data = data.data;
-                regionalMixChart.update();
+                
+                // Only update charts if Chart.js is available
+                if (typeof Chart !== 'undefined' && regionalMixChart) {
+                    regionalMixChart.data.datasets[0].data = data.data;
+                    regionalMixChart.update();
+                }
 
                 const insightsContainer = document.getElementById('regional-insights-text');
                 insightsContainer.textContent = data.insights;
@@ -503,7 +649,16 @@
                 container.classList.remove('hidden');
                 container.innerHTML = '<div class="flex items-center justify-center p-4"><span class="loader"></span></div>';
                 
-                const apiKey = "";
+                const apiKey = ""; // Add your Gemini API key here
+                
+                // Check if API key is configured
+                if (!apiKey) {
+                    container.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><p class="text-yellow-800"><strong>AI Feature Not Configured:</strong> To enable AI-powered insights, please add your Google Gemini API key to the code. Visit <a href="https://makersuite.google.com/app/apikey" target="_blank" class="underline text-blue-600">Google AI Studio</a> to get your free API key.</p></div>';
+                    button.disabled = false;
+                    button.innerHTML = originalButtonContent;
+                    return;
+                }
+                
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
                 const payload = {
@@ -617,6 +772,24 @@
 
             createCharts();
             updateDashboard();
+            
+            // Back to top button functionality
+            const backToTopBtn = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         });
     </script>
 </body>
